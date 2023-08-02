@@ -1,7 +1,7 @@
 class Meal
-  attr_reader :name
-  attr_accessor :id, :price
-  
+  attr_accessor :id
+  attr_reader :name, :price
+
   def initialize(attributes = {})
     @id = attributes[:id]
     @name = attributes[:name]
