@@ -1,64 +1,102 @@
-# TODO: implement the router of your app.
 class Router
-  def initialize(meals_controller, customers_controller)
+  def initialize(meals_controller, customers_controller, sessions_controller, orders_controller)
     @meals_controller = meals_controller
     @customers_controller = customers_controller
+    @sessions_controller = sessions_controller
+    @orders_controller = orders_controller
     @running = true
   end
 
   def run
-    app_title
     while @running
-      display_tasks
-      action = gets.chomp.to_i
+      @current_user = @sessions_controller.login
+      while @current_user
+        if @current_user.manager?
+          route_manager_action
+          # print_manager_menu
+          # choice = gets.chomp.to_i
+          # print `clear`
+          # manager_action(choice)
+        else # @current_user is rider
+          route_rider_action
+        end
+      end
       print `clear`
-      route_action(action)
     end
   end
 
   private
 
-  def route_action(action)
-    case action
-    when 1 then @meals_controller.list
-    when 2 then @meals_controller.add
-    when 3 then @meals_controller.edit
-    when 4 then @meals_controller.remove
-    when 5 then @customers_controller.list
-    when 6 then @customers_controller.add
-    when 0 then stop
-    else
-      puts 'Please press 1, 2, 3, 4 or 0'
+  def route_manager_action
+    print_manager_menu
+    choice = gets.chomp.to_i
+    print `clear`
+    manager_action(choice)
+  end
+
+  def route_rider_action
+    print_rider_menu
+    choice = gets.chomp.to_i
+    print `clear`
+    rider_action(choice)
+  end
+
+  def print_manager_menu
+    puts "--------------------"
+    puts "------- MENU -------"
+    puts "--------------------"
+    puts "1. Add new meal"
+    puts "2. List all meals"
+    puts "3. Add new customer"
+    puts "4. List all customers"
+    puts "5. Add new order"
+    puts "6. List all undelivered orders"
+    puts "7. Log out"
+    puts "8. Exit"
+    print "> "
+  end
+
+  def print_rider_menu
+    puts "--------------------"
+    puts "------- MENU -------"
+    puts "--------------------"
+    puts "1. Mark order as delivered"
+    puts "2. List all my undelivered meals"
+    puts "3. Log out"
+    puts "4. Exit"
+    print "> "
+  end
+
+  def manager_action(choice)
+    case choice
+    when 1 then @meals_controller.add
+    when 2 then @meals_controller.list
+    when 3 then @customers_controller.add
+    when 4 then @customers_controller.list
+    when 5 then @orders_controller.add
+    when 6 then @orders_controller.list_all_undelivered
+    when 7 then logout!
+    when 8 then stop!
+    else puts "Try again..."
     end
   end
 
-  def stop
+  def rider_action(choice)
+    case choice
+    when 1 then @orders_controller.mark_order_as_delivered(@current_user)
+    when 2 then @orders_controller.list_all_my_undelivered(@current_user)
+    when 3 then logout!
+    when 4 then stop!
+    else puts "Try again..."
+    end
+  end
+
+  def logout!
+    @current_user = nil
+  end
+
+  def stop!
+    logout!
     @running = false
-  end
-
-  def display_tasks
-    menu_title
-    puts '1 - List all meals'
-    puts '2 - Create a new meal'
-    puts '3 - Edit a meals price'
-    puts '4 - Delete a meal'
-    puts '5 - List all customers'
-    puts '6 - Create a new customer'
-    puts '0 - Stop and exit the program'
-    print '> '
-  end
-
-  def app_title
-    print `clear`
-    puts ''.center(50, '=')
-    puts ' Welcome to batch #1360 Food Delivery App '.center(50, '=')
-    puts ''.center(50, '=')
-  end
-
-  def menu_title
-    puts ''
-    puts ''.center(50, '=')
-    puts ' What do you want to do next? '.center(50, '=')
-    puts ''.center(50, '=')
   end
 end
